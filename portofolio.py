@@ -1,0 +1,131 @@
+from data import baca_harga, baca_posisi
+from algoritma import (
+    hitung_return_harian,
+    cari_terbesar,
+    cari_terkecil,
+)
+
+
+def analisis_saham(harga, lot, harga_beli):
+    if not harga:
+        return None
+
+    harga_terakhir = harga[-1]
+
+    return_total = (
+        (harga_terakhir - harga[0])
+        / harga[0]
+    ) * 100
+
+    return_harian = hitung_return_harian(harga)
+
+    harian_terbaik = cari_terbesar(return_harian)
+    harian_terburuk = cari_terkecil(return_harian)
+
+    nilai_pasar = harga_terakhir * lot * 100
+    modal = harga_beli * lot * 100
+
+    pl = nilai_pasar - modal
+    pl_persen = (pl / modal) * 100
+
+    return {
+        "harga_terakhir": harga_terakhir,
+        "return_total": return_total,
+        "harian_terbaik": harian_terbaik,
+        "harian_terburuk": harian_terburuk,
+        "nilai_pasar": nilai_pasar,
+        "modal": modal,
+        "pl": pl,
+        "pl_persen": pl_persen,
+    }
+
+
+def susun_laporan(laporan, total_nilai, total_modal):
+    garis = "-" * 73
+    baris = []
+
+    baris.append(
+        f"{'TICKER':<8}"
+        f"{'HARGA':>9}"
+        f"{'RET%':>8}"
+        f"{'NILAI':>14}"
+        f"{'MODAL':>13}"
+        f"{'P/L':>13}"
+        f"{'P/L%':>8}"
+    )
+    baris.append(garis)
+
+    for ticker, hasil in laporan:
+        baris.append(
+            f"{ticker:<8}"
+            f"{hasil['harga_terakhir']:>9,.0f}"
+            f"{hasil['return_total']:>+8.2f}"
+            f"{hasil['nilai_pasar']:>14,.0f}"
+            f"{hasil['modal']:>13,.0f}"
+            f"{hasil['pl']:>+13,.0f}"
+            f"{hasil['pl_persen']:>+8.2f}"
+        )
+
+    baris.append(garis)
+
+    total_pl = total_nilai - total_modal
+    total_pl_persen = (total_pl / total_modal) * 100
+
+    baris.append(
+        f"{'TOTAL':<8}"
+        f"{'':>9}"
+        f"{'':>8}"
+        f"{total_nilai:>14,.0f}"
+        f"{total_modal:>13,.0f}"
+        f"{total_pl:>+13,.0f}"
+        f"{total_pl_persen:>+8.2f}"
+    )
+
+    return "\n".join(baris)
+
+
+if __name__ == "__main__":
+    hasil = analisis_saham(
+        [9800.0, 9850.0, 9700.0, 9900.0],
+        10,
+        9500,
+    )
+
+    assert round(hasil["pl"], 0) == 400000
+
+    portofolio = {
+        "BBCA": baca_harga("harga_bbca.csv"),
+        "BBRI": baca_harga("harga_bbri.csv"),
+        "BMRI": baca_harga("harga_bmri.csv"),
+    }
+
+    posisi = baca_posisi("posisi.csv")
+
+    total_nilai = 0
+    total_modal = 0
+    laporan = []
+
+    for ticker, harga in portofolio.items():
+        if harga is None:
+            print(f"SKIP {ticker}: data tidak tersedia")
+            continue
+
+        lot = posisi[ticker]["lot"]
+        harga_beli = posisi[ticker]["harga_beli"]
+
+        hasil = analisis_saham(
+            harga,
+            lot,
+            harga_beli,
+        )
+
+        total_nilai += hasil["nilai_pasar"]
+        total_modal += hasil["modal"]
+        laporan.append((ticker, hasil))
+
+    laporan.sort(key=lambda item: item[1]["pl"], reverse=True)
+
+    teks = susun_laporan(laporan, total_nilai, total_modal)
+    print(teks)
+    with open("laporan.txt", "w") as f:
+        f.write(teks)
