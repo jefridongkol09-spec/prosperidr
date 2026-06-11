@@ -103,9 +103,17 @@ if __name__ == "__main__":
     total_modal = 0
     laporan = []
 
-    for ticker, harga in portofolio.items():
-        lot = posisi[ticker]["lot"]
-        harga_beli = posisi[ticker]["harga_beli"]
+    for ticker, info in posisi.items():
+        lot = info["lot"]
+        harga_beli = info["harga_beli"]
+
+        harga = portofolio.get(ticker)
+        if not harga:
+            print(
+                f"PERINGATAN: posisi {ticker} tidak punya data harga"
+                f" — TOTAL TIDAK MENCAKUP POSISI INI"
+            )
+            continue
 
         hasil = analisis_saham(
             harga,
