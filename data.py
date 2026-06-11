@@ -1,6 +1,6 @@
-def baca_harga(nama_file):
+def baca_semua_harga(nama_file):
     try:
-        hasil = []
+        hasil = {}
 
         with open(nama_file, "r") as file:
             for i, baris in enumerate(file):
@@ -8,10 +8,12 @@ def baca_harga(nama_file):
                     continue
 
                 bagian = baris.strip().split(",")
+                ticker = bagian[0]
+                harga = float(bagian[2])
 
-                harga = float(bagian[1])
-
-                hasil.append(harga)
+                if ticker not in hasil:
+                    hasil[ticker] = []
+                hasil[ticker].append(harga)
 
         return hasil
     except FileNotFoundError:
@@ -44,9 +46,13 @@ def baca_posisi(nama_file):
         print(f"PERINGATAN: file {nama_file} tidak ditemukan")
         return None
 if __name__ == "__main__":
-    hasil_harga = baca_harga("harga_bbca.csv")
+    hasil_semua = baca_semua_harga("harga.csv")
 
-    assert hasil_harga == [9800, 9850, 9700, 9900]
+    assert hasil_semua == {
+        "BBCA": [9800.0, 9850.0, 9700.0, 9900.0],
+        "BBRI": [4500.0, 4480.0, 4550.0, 4600.0],
+        "BMRI": [6100.0, 6150.0, 6050.0, 6200.0],
+    }
 
     hasil_posisi = baca_posisi("posisi.csv")
 

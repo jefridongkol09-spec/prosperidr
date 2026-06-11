@@ -1,4 +1,4 @@
-from data import baca_harga, baca_posisi
+from data import baca_semua_harga, baca_posisi
 from algoritma import (
     hitung_return_harian,
     cari_terbesar,
@@ -93,11 +93,9 @@ if __name__ == "__main__":
 
     assert round(hasil["pl"], 0) == 400000
 
-    portofolio = {
-        "BBCA": baca_harga("harga_bbca.csv"),
-        "BBRI": baca_harga("harga_bbri.csv"),
-        "BMRI": baca_harga("harga_bmri.csv"),
-    }
+    portofolio = baca_semua_harga("harga.csv")
+    if portofolio is None:
+        raise SystemExit(1)
 
     posisi = baca_posisi("posisi.csv")
 
@@ -106,10 +104,6 @@ if __name__ == "__main__":
     laporan = []
 
     for ticker, harga in portofolio.items():
-        if harga is None:
-            print(f"SKIP {ticker}: data tidak tersedia")
-            continue
-
         lot = posisi[ticker]["lot"]
         harga_beli = posisi[ticker]["harga_beli"]
 
