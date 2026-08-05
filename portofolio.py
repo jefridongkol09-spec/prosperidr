@@ -1,4 +1,6 @@
-from data import baca_semua_harga, baca_posisi
+import argparse
+
+from data import baca_semua_harga, baca_posisi, tambah_posisi, hapus_posisi
 from algoritma import (
     hitung_return_harian,
     cari_terbesar,
@@ -84,15 +86,7 @@ def susun_laporan(laporan, total_nilai, total_modal):
     return "\n".join(baris)
 
 
-if __name__ == "__main__":
-    hasil = analisis_saham(
-        [9800.0, 9850.0, 9700.0, 9900.0],
-        10,
-        9500,
-    )
-
-    assert round(hasil["pl"], 0) == 400000
-
+def cetak_laporan():
     portofolio = baca_semua_harga("harga.csv")
     if portofolio is None:
         raise SystemExit(1)
@@ -131,3 +125,39 @@ if __name__ == "__main__":
     print(teks)
     with open("laporan.txt", "w") as f:
         f.write(teks)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="prosperidr - portfolio tracker")
+    subparsers = parser.add_subparsers(dest="command")
+
+    subparsers.add_parser("laporan")
+
+    parser_tambah = subparsers.add_parser("tambah")
+    parser_tambah.add_argument("ticker")
+    parser_tambah.add_argument("lot", type=int)
+    parser_tambah.add_argument("harga_beli", type=int)
+
+    parser_hapus = subparsers.add_parser("hapus")
+    parser_hapus.add_argument("ticker")
+
+    args = parser.parse_args()
+
+    if args.command == "laporan":
+        cetak_laporan()
+    elif args.command == "tambah":
+        berhasil = tambah_posisi("posisi.csv", args.ticker, args.lot, args.harga_beli)
+        if berhasil:
+            print(f"Posisi {args.ticker} berhasil ditambahkan")
+        else:
+            print(f"Gagal menambahkan posisi {args.ticker}")
+    elif args.command == "hapus":
+        berhasil = hapus_posisi("posisi.csv", args.ticker)
+        if berhasil:
+            print(f"Posisi {args.ticker} berhasil dihapus")
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
