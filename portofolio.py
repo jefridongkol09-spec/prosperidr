@@ -111,7 +111,7 @@ if __name__ == "__main__":
         if not harga:
             print(
                 f"PERINGATAN: posisi {ticker} tidak punya data harga"
-                f" — TOTAL TIDAK MENCAKUP POSISI INI"
+                f" - TOTAL TIDAK MENCAKUP POSISI INI"
             )
             continue
 
