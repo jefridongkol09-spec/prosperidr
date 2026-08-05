@@ -15,15 +15,14 @@ def analisis_saham(harga, lot, harga_beli):
 
     harga_terakhir = harga[-1]
 
-    return_total = (
-        (harga_terakhir - harga[0])
-        / harga[0]
-    ) * 100
+    semua_return_harian = hitung_return_harian(harga)
 
-    return_harian = hitung_return_harian(harga)
+    # return harian = perubahan dua hari terakhir, berapa pun panjang window
+    # harga yang masuk (4 hari dari harga.csv, 5 hari dari API, dst).
+    return_harian = semua_return_harian[-1] if semua_return_harian else 0.0
 
-    harian_terbaik = cari_terbesar(return_harian)
-    harian_terburuk = cari_terkecil(return_harian)
+    harian_terbaik = cari_terbesar(semua_return_harian)
+    harian_terburuk = cari_terkecil(semua_return_harian)
 
     nilai_pasar = harga_terakhir * lot * 100
     modal = harga_beli * lot * 100
@@ -33,7 +32,7 @@ def analisis_saham(harga, lot, harga_beli):
 
     return {
         "harga_terakhir": harga_terakhir,
-        "return_total": return_total,
+        "return_harian": return_harian,
         "harian_terbaik": harian_terbaik,
         "harian_terburuk": harian_terburuk,
         "nilai_pasar": nilai_pasar,
@@ -62,7 +61,7 @@ def susun_laporan(laporan, total_nilai, total_modal):
         baris.append(
             f"{ticker:<8}"
             f"{hasil['harga_terakhir']:>9,.0f}"
-            f"{hasil['return_total']:>+8.2f}"
+            f"{hasil['return_harian']:>+8.2f}"
             f"{hasil['nilai_pasar']:>14,.0f}"
             f"{hasil['modal']:>13,.0f}"
             f"{hasil['pl']:>+13,.0f}"

@@ -8,7 +8,9 @@ def ambil_harga_online(ticker, hari=5):
     except Exception:
         return None
 
-    if riwayat.empty:
+    tutup = riwayat["Close"].dropna()
+
+    if tutup.empty:
         return None
 
-    return [round(float(harga), 2) for harga in riwayat["Close"]]
+    return [round(float(harga), 2) for harga in tutup]
