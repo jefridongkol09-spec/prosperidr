@@ -21,6 +21,13 @@ def baca_semua_harga(nama_file):
         return None
 
 
+def tulis_posisi(nama_file, data_posisi):
+    with open(nama_file, "w") as file:
+        file.write("ticker,lot,harga_beli\n")
+        for tkr, info in data_posisi.items():
+            file.write(f"{tkr},{info['lot']},{info['harga_beli']}\n")
+
+
 def tambah_posisi(nama_file, ticker, lot, harga_beli):
     posisi = baca_posisi(nama_file)
     if posisi is None:
@@ -35,11 +42,21 @@ def tambah_posisi(nama_file, ticker, lot, harga_beli):
     else:
         posisi[ticker] = {"lot": lot, "harga_beli": harga_beli}
 
-    with open(nama_file, "w") as file:
-        file.write("ticker,lot,harga_beli\n")
-        for tkr, info in posisi.items():
-            file.write(f"{tkr},{info['lot']},{info['harga_beli']}\n")
+    tulis_posisi(nama_file, posisi)
+    return True
 
+
+def hapus_posisi(nama_file, ticker):
+    posisi = baca_posisi(nama_file)
+    if posisi is None:
+        return False
+
+    if ticker not in posisi:
+        print(f"PERINGATAN: posisi {ticker} tidak ditemukan")
+        return False
+
+    del posisi[ticker]
+    tulis_posisi(nama_file, posisi)
     return True
 
 

@@ -1,4 +1,4 @@
-from data import baca_semua_harga, baca_posisi, tambah_posisi
+from data import baca_semua_harga, baca_posisi, tambah_posisi, hapus_posisi
 
 
 def test_baca_semua_harga():
@@ -56,3 +56,32 @@ def test_tambah_posisi_gabung_ticker_sama(tmp_path):
 def test_tambah_posisi_file_tidak_ada(tmp_path):
     file_path = tmp_path / "tidak_ada.csv"
     assert tambah_posisi(str(file_path), "BBCA", 10, 9500) is False
+
+
+def test_hapus_posisi_ticker_ada(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\nBBCA,10,9500\nBBRI,50,4400\n")
+
+    berhasil = hapus_posisi(str(file_path), "BBCA")
+
+    assert berhasil is True
+    assert baca_posisi(str(file_path)) == {
+        "BBRI": {"lot": 50, "harga_beli": 4400},
+    }
+
+
+def test_hapus_posisi_ticker_tidak_ada(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\nBBCA,10,9500\n")
+
+    berhasil = hapus_posisi(str(file_path), "TLKM")
+
+    assert berhasil is False
+    assert baca_posisi(str(file_path)) == {
+        "BBCA": {"lot": 10, "harga_beli": 9500},
+    }
+
+
+def test_hapus_posisi_file_tidak_ada(tmp_path):
+    file_path = tmp_path / "tidak_ada.csv"
+    assert hapus_posisi(str(file_path), "BBCA") is False
