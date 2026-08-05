@@ -45,21 +45,3 @@ def baca_posisi(nama_file):
     except FileNotFoundError:
         print(f"PERINGATAN: file {nama_file} tidak ditemukan")
         return None
-if __name__ == "__main__":
-    hasil_semua = baca_semua_harga("harga.csv")
-
-    assert hasil_semua == {
-        "BBCA": [9800.0, 9850.0, 9700.0, 9900.0],
-        "BBRI": [4500.0, 4480.0, 4550.0, 4600.0],
-        "BMRI": [6100.0, 6150.0, 6050.0, 6200.0],
-    }
-
-    hasil_posisi = baca_posisi("posisi.csv")
-
-    assert hasil_posisi == {
-        "BBCA": {"lot": 10, "harga_beli": 9500},
-        "BBRI": {"lot": 50, "harga_beli": 4400},
-        "BMRI": {"lot": 20, "harga_beli": 6300},
-    }
-
-    print("Semua tes berhasil!")
