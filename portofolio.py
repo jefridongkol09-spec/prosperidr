@@ -1,6 +1,7 @@
 import argparse
 
 from data import baca_semua_harga, baca_posisi, tambah_posisi, hapus_posisi
+from api_harga import ambil_harga_online
 from algoritma import (
     hitung_return_harian,
     cari_terbesar,
@@ -86,12 +87,34 @@ def susun_laporan(laporan, total_nilai, total_modal):
     return "\n".join(baris)
 
 
-def cetak_laporan():
+def ambil_data_harga(tickers, cache, live):
+    hasil = {}
+
+    for ticker in tickers:
+        if live:
+            harga = ambil_harga_online(ticker)
+            if harga:
+                hasil[ticker] = harga
+                continue
+            print(
+                f"PERINGATAN: gagal ambil harga live untuk {ticker}"
+                f" - pakai data historis dari harga.csv"
+            )
+
+        if ticker in cache:
+            hasil[ticker] = cache[ticker]
+
+    return hasil
+
+
+def cetak_laporan(live=False):
     portofolio = baca_semua_harga("harga.csv")
     if portofolio is None:
         raise SystemExit(1)
 
     posisi = baca_posisi("posisi.csv")
+
+    data_harga = ambil_data_harga(posisi.keys(), portofolio, live)
 
     total_nilai = 0
     total_modal = 0
@@ -101,7 +124,7 @@ def cetak_laporan():
         lot = info["lot"]
         harga_beli = info["harga_beli"]
 
-        harga = portofolio.get(ticker)
+        harga = data_harga.get(ticker)
         if not harga:
             print(
                 f"PERINGATAN: posisi {ticker} tidak punya data harga"
@@ -131,7 +154,12 @@ def main():
     parser = argparse.ArgumentParser(description="prosperidr - portfolio tracker")
     subparsers = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser("laporan")
+    parser_laporan = subparsers.add_parser("laporan")
+    parser_laporan.add_argument(
+        "--live",
+        action="store_true",
+        help="ambil harga real-time dari API, bukan harga.csv",
+    )
 
     parser_tambah = subparsers.add_parser("tambah")
     parser_tambah.add_argument("ticker")
@@ -144,7 +172,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "laporan":
-        cetak_laporan()
+        cetak_laporan(live=args.live)
     elif args.command == "tambah":
         berhasil = tambah_posisi("posisi.csv", args.ticker, args.lot, args.harga_beli)
         if berhasil:
