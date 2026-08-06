@@ -20,6 +20,22 @@ def test_baca_semua_harga_file_tidak_ada():
     assert baca_semua_harga("tidak_ada.csv") is None
 
 
+def test_baca_semua_harga_urutan_baris_diacak(tmp_path):
+    # File tidak menjamin baris per ticker terurut kronologis - fungsi ini
+    # yang harus mengurutkan, bukan mengasumsikan urutan baris = urutan hari.
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text(
+        "ticker,tanggal,close\n"
+        "BBCA,2025-01-03,9700\n"
+        "BBCA,2025-01-01,9800\n"
+        "BBCA,2025-01-02,9850\n"
+    )
+
+    hasil = baca_semua_harga(str(file_path))
+
+    assert hasil == {"BBCA": [9800.0, 9850.0, 9700.0]}
+
+
 def test_baca_tanggal_terakhir():
     hasil = baca_tanggal_terakhir("harga.csv")
     assert hasil == {
@@ -31,6 +47,21 @@ def test_baca_tanggal_terakhir():
 
 def test_baca_tanggal_terakhir_file_tidak_ada():
     assert baca_tanggal_terakhir("tidak_ada.csv") is None
+
+
+def test_baca_tanggal_terakhir_urutan_baris_diacak(tmp_path):
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text(
+        "ticker,tanggal,close\n"
+        "BBCA,2025-01-04,9900\n"
+        "BBCA,2025-01-01,9800\n"
+        "BBCA,2025-01-03,9700\n"
+        "BBCA,2025-01-02,9850\n"
+    )
+
+    hasil = baca_tanggal_terakhir(str(file_path))
+
+    assert hasil == {"BBCA": "2025-01-04"}
 
 
 def test_baca_posisi():
@@ -75,6 +106,31 @@ def test_tambah_posisi_gabung_ticker_sama(tmp_path):
 def test_tambah_posisi_file_tidak_ada(tmp_path):
     file_path = tmp_path / "tidak_ada.csv"
     assert tambah_posisi(str(file_path), "BBCA", 10, 9500) is False
+
+
+def test_tambah_posisi_menolak_lot_nol(tmp_path):
+    # lot atau harga_beli 0 membuat modal = 0, yang meledakkan pembagian
+    # pl_persen di analisis_saham nanti - tolak di titik masuk, jangan
+    # biarkan tersimpan lalu meledak jauh dari sumbernya.
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\n")
+
+    assert tambah_posisi(str(file_path), "BBCA", 0, 9500) is False
+    assert baca_posisi(str(file_path)) == {}
+
+
+def test_tambah_posisi_menolak_lot_negatif(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\n")
+
+    assert tambah_posisi(str(file_path), "BBCA", -5, 9500) is False
+
+
+def test_tambah_posisi_menolak_harga_beli_nol(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\n")
+
+    assert tambah_posisi(str(file_path), "BBCA", 10, 0) is False
 
 
 def test_hapus_posisi_ticker_ada(tmp_path):

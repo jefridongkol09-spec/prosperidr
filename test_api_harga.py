@@ -43,6 +43,23 @@ def test_ambil_harga_online_hari_terakhir_belum_tersedia(monkeypatch):
     assert hasil == {"harga": [100.0, 200.0], "tanggal_terakhir": "2026-08-04"}
 
 
+def test_ambil_harga_online_nan_di_tengah_ditolak(monkeypatch, capsys):
+    # NaN di TENGAH (bukan di ekor) berarti ada hari bolong - kalau dibuang
+    # begitu saja lewat dropna(), hari sebelum dan sesudah gap jadi "berurutan"
+    # secara list, dan hitung_return_harian akan menghitung return lintas-gap
+    # itu seolah return satu hari. Data begini harus ditolak, bukan disambung.
+    df = buat_df(
+        [100.0, float("nan"), 105.0],
+        ["2026-08-03", "2026-08-04", "2026-08-05"],
+    )
+    monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))
+
+    hasil = api_harga.ambil_harga_online("BBCA")
+
+    assert hasil is None
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
 def test_ambil_harga_online_semua_nan(monkeypatch):
     df = buat_df([float("nan"), float("nan")], ["2026-08-03", "2026-08-04"])
     monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))

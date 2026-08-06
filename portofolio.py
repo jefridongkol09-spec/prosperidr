@@ -24,8 +24,11 @@ def analisis_saham(harga, lot, harga_beli):
     semua_return_harian = hitung_return_harian(harga)
 
     # return harian = perubahan dua hari terakhir, berapa pun panjang window
-    # harga yang masuk (4 hari dari harga.csv, 5 hari dari API, dst).
-    return_harian = semua_return_harian[-1] if semua_return_harian else 0.0
+    # harga yang masuk (4 hari dari harga.csv, 5 hari dari API, dst). Satu
+    # titik data (atau semua transisi dilewati karena harga 0) berarti tidak
+    # ada "kemarin" untuk dibandingkan - None ("tidak diketahui"), bukan 0.0
+    # ("tidak bergerak") yang memfabrikasi kepastian yang tidak ada.
+    return_harian = semua_return_harian[-1] if semua_return_harian else None
 
     harian_terbaik = cari_terbesar(semua_return_harian)
     harian_terburuk = cari_terkecil(semua_return_harian)
@@ -64,15 +67,25 @@ def susun_laporan(laporan, total_nilai, total_modal):
     )
     baris.append(garis)
 
+    if not laporan:
+        baris.append("Tidak ada posisi dengan data harga untuk dilaporkan.")
+        return "\n".join(baris)
+
     tanggal_unik = set()
 
     for ticker, hasil in laporan:
         tanggal_unik.add(hasil["tanggal_terakhir"])
+
+        if hasil["return_harian"] is None:
+            ret_str = f"{'n/a':>8}"
+        else:
+            ret_str = f"{hasil['return_harian']:>+8.2f}"
+
         baris.append(
             f"{ticker:<8}"
             f"{hasil['tanggal_terakhir']:>12}"
             f"{hasil['harga_terakhir']:>9,.0f}"
-            f"{hasil['return_harian']:>+8.2f}"
+            f"{ret_str}"
             f"{hasil['nilai_pasar']:>14,.0f}"
             f"{hasil['modal']:>13,.0f}"
             f"{hasil['pl']:>+13,.0f}"
@@ -138,6 +151,8 @@ def cetak_laporan(live=False):
     tanggal_cache = baca_tanggal_terakhir("harga.csv")
 
     posisi = baca_posisi("posisi.csv")
+    if posisi is None:
+        raise SystemExit(1)
 
     data_harga = ambil_data_harga(posisi.keys(), portofolio, tanggal_cache, live)
 

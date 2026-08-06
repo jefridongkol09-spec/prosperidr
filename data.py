@@ -1,6 +1,6 @@
 def baca_semua_harga(nama_file):
     try:
-        hasil = {}
+        mentah = {}
 
         with open(nama_file, "r") as file:
             for i, baris in enumerate(file):
@@ -9,11 +9,20 @@ def baca_semua_harga(nama_file):
 
                 bagian = baris.strip().split(",")
                 ticker = bagian[0]
+                tanggal = bagian[1]
                 harga = float(bagian[2])
 
-                if ticker not in hasil:
-                    hasil[ticker] = []
-                hasil[ticker].append(harga)
+                if ticker not in mentah:
+                    mentah[ticker] = []
+                mentah[ticker].append((tanggal, harga))
+
+        # baris per ticker tidak dijamin terurut kronologis di file - urutkan
+        # dulu berdasarkan tanggal, karena pemanggil (hitung_return_harian)
+        # mengasumsikan elemen berurutan dalam list = hari berurutan.
+        hasil = {}
+        for ticker, baris_harga in mentah.items():
+            baris_harga.sort(key=lambda pasangan: pasangan[0])
+            hasil[ticker] = [harga for _, harga in baris_harga]
 
         return hasil
     except FileNotFoundError:
@@ -34,7 +43,11 @@ def baca_tanggal_terakhir(nama_file):
                 ticker = bagian[0]
                 tanggal = bagian[1]
 
-                hasil[ticker] = tanggal
+                # ambil tanggal terbesar yang ditemui, bukan baris terakhir
+                # yang dibaca - format YYYY-MM-DD terurut leksikografis sama
+                # dengan kronologis, jadi ini aman tanpa parsing tanggal.
+                if ticker not in hasil or tanggal > hasil[ticker]:
+                    hasil[ticker] = tanggal
 
         return hasil
     except FileNotFoundError:
@@ -50,6 +63,13 @@ def tulis_posisi(nama_file, data_posisi):
 
 
 def tambah_posisi(nama_file, ticker, lot, harga_beli):
+    if lot <= 0 or harga_beli <= 0:
+        # lot/harga_beli <= 0 membuat modal = 0, yang meledakkan pembagian
+        # pl_persen di analisis_saham nanti - tolak di titik masuk data,
+        # bukan biarkan tersimpan lalu crash jauh dari sumbernya.
+        print("PERINGATAN: lot dan harga_beli harus lebih besar dari 0")
+        return False
+
     posisi = baca_posisi(nama_file)
     if posisi is None:
         return False
