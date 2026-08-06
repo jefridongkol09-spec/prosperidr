@@ -13,4 +13,7 @@ def ambil_harga_online(ticker, hari=5):
     if tutup.empty:
         return None
 
-    return [round(float(harga), 2) for harga in tutup]
+    return {
+        "harga": [round(float(harga), 2) for harga in tutup],
+        "tanggal_terakhir": tutup.index[-1].strftime("%Y-%m-%d"),
+    }

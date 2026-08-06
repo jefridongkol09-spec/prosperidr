@@ -11,32 +11,40 @@ class FakeTicker:
         return self._riwayat
 
 
+def buat_df(close, tanggal):
+    return pd.DataFrame({"Close": close}, index=pd.to_datetime(tanggal))
+
+
 def test_ambil_harga_online_berhasil(monkeypatch):
     simbol_dipakai = []
 
     def fake_ticker(simbol):
         simbol_dipakai.append(simbol)
-        return FakeTicker(pd.DataFrame({"Close": [100.123, 200.456]}))
+        df = buat_df([100.123, 200.456], ["2026-08-03", "2026-08-04"])
+        return FakeTicker(df)
 
     monkeypatch.setattr(api_harga.yf, "Ticker", fake_ticker)
 
     hasil = api_harga.ambil_harga_online("BBCA")
 
-    assert hasil == [100.12, 200.46]
+    assert hasil == {"harga": [100.12, 200.46], "tanggal_terakhir": "2026-08-04"}
     assert simbol_dipakai == ["BBCA.JK"]
 
 
 def test_ambil_harga_online_hari_terakhir_belum_tersedia(monkeypatch):
     # Hari terakhir kadang NaN (closing price belum dilaporkan Yahoo Finance)
-    # tanpa DataFrame-nya kosong - harus dibuang, bukan ikut jadi "nan" di list.
-    df = pd.DataFrame({"Close": [100.0, 200.0, float("nan")]})
+    # tanpa DataFrame-nya kosong - harus dibuang, dan tanggal_terakhir harus
+    # ikut mundur ke hari valid terakhir, bukan diam-diam tetap hari ini.
+    df = buat_df([100.0, 200.0, float("nan")], ["2026-08-03", "2026-08-04", "2026-08-05"])
     monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))
 
-    assert api_harga.ambil_harga_online("BBCA") == [100.0, 200.0]
+    hasil = api_harga.ambil_harga_online("BBCA")
+
+    assert hasil == {"harga": [100.0, 200.0], "tanggal_terakhir": "2026-08-04"}
 
 
 def test_ambil_harga_online_semua_nan(monkeypatch):
-    df = pd.DataFrame({"Close": [float("nan"), float("nan")]})
+    df = buat_df([float("nan"), float("nan")], ["2026-08-03", "2026-08-04"])
     monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))
 
     assert api_harga.ambil_harga_online("BBCA") is None

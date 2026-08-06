@@ -21,6 +21,27 @@ def baca_semua_harga(nama_file):
         return None
 
 
+def baca_tanggal_terakhir(nama_file):
+    try:
+        hasil = {}
+
+        with open(nama_file, "r") as file:
+            for i, baris in enumerate(file):
+                if i == 0:
+                    continue
+
+                bagian = baris.strip().split(",")
+                ticker = bagian[0]
+                tanggal = bagian[1]
+
+                hasil[ticker] = tanggal
+
+        return hasil
+    except FileNotFoundError:
+        print(f"PERINGATAN: file {nama_file} tidak ditemukan")
+        return None
+
+
 def tulis_posisi(nama_file, data_posisi):
     with open(nama_file, "w") as file:
         file.write("ticker,lot,harga_beli\n")

@@ -1,4 +1,10 @@
-from data import baca_semua_harga, baca_posisi, tambah_posisi, hapus_posisi
+from data import (
+    baca_semua_harga,
+    baca_posisi,
+    baca_tanggal_terakhir,
+    tambah_posisi,
+    hapus_posisi,
+)
 
 
 def test_baca_semua_harga():
@@ -12,6 +18,19 @@ def test_baca_semua_harga():
 
 def test_baca_semua_harga_file_tidak_ada():
     assert baca_semua_harga("tidak_ada.csv") is None
+
+
+def test_baca_tanggal_terakhir():
+    hasil = baca_tanggal_terakhir("harga.csv")
+    assert hasil == {
+        "BBCA": "2025-01-04",
+        "BBRI": "2025-01-04",
+        "BMRI": "2025-01-04",
+    }
+
+
+def test_baca_tanggal_terakhir_file_tidak_ada():
+    assert baca_tanggal_terakhir("tidak_ada.csv") is None
 
 
 def test_baca_posisi():

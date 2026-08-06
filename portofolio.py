@@ -1,6 +1,12 @@
 import argparse
 
-from data import baca_semua_harga, baca_posisi, tambah_posisi, hapus_posisi
+from data import (
+    baca_semua_harga,
+    baca_posisi,
+    baca_tanggal_terakhir,
+    tambah_posisi,
+    hapus_posisi,
+)
 from api_harga import ambil_harga_online
 from algoritma import (
     hitung_return_harian,
@@ -43,11 +49,12 @@ def analisis_saham(harga, lot, harga_beli):
 
 
 def susun_laporan(laporan, total_nilai, total_modal):
-    garis = "-" * 73
+    garis = "-" * 85
     baris = []
 
     baris.append(
         f"{'TICKER':<8}"
+        f"{'TANGGAL':>12}"
         f"{'HARGA':>9}"
         f"{'RET%':>8}"
         f"{'NILAI':>14}"
@@ -57,9 +64,13 @@ def susun_laporan(laporan, total_nilai, total_modal):
     )
     baris.append(garis)
 
+    tanggal_unik = set()
+
     for ticker, hasil in laporan:
+        tanggal_unik.add(hasil["tanggal_terakhir"])
         baris.append(
             f"{ticker:<8}"
+            f"{hasil['tanggal_terakhir']:>12}"
             f"{hasil['harga_terakhir']:>9,.0f}"
             f"{hasil['return_harian']:>+8.2f}"
             f"{hasil['nilai_pasar']:>14,.0f}"
@@ -73,8 +84,12 @@ def susun_laporan(laporan, total_nilai, total_modal):
     total_pl = total_nilai - total_modal
     total_pl_persen = (total_pl / total_modal) * 100
 
+    campuran = len(tanggal_unik) > 1
+    label_total = "TOTAL*" if campuran else "TOTAL"
+
     baris.append(
-        f"{'TOTAL':<8}"
+        f"{label_total:<8}"
+        f"{'':>12}"
         f"{'':>9}"
         f"{'':>8}"
         f"{total_nilai:>14,.0f}"
@@ -83,17 +98,23 @@ def susun_laporan(laporan, total_nilai, total_modal):
         f"{total_pl_persen:>+8.2f}"
     )
 
+    if campuran:
+        baris.append(
+            "PERINGATAN: TOTAL* mencampur harga per tanggal berbeda"
+            f" ({', '.join(sorted(tanggal_unik))}) - lihat kolom TANGGAL per baris"
+        )
+
     return "\n".join(baris)
 
 
-def ambil_data_harga(tickers, cache, live):
+def ambil_data_harga(tickers, cache, cache_tanggal, live):
     hasil = {}
 
     for ticker in tickers:
         if live:
-            harga = ambil_harga_online(ticker)
-            if harga:
-                hasil[ticker] = harga
+            data_live = ambil_harga_online(ticker)
+            if data_live:
+                hasil[ticker] = data_live
                 continue
             print(
                 f"PERINGATAN: gagal ambil harga live untuk {ticker}"
@@ -101,7 +122,10 @@ def ambil_data_harga(tickers, cache, live):
             )
 
         if ticker in cache:
-            hasil[ticker] = cache[ticker]
+            hasil[ticker] = {
+                "harga": cache[ticker],
+                "tanggal_terakhir": cache_tanggal.get(ticker),
+            }
 
     return hasil
 
@@ -111,9 +135,11 @@ def cetak_laporan(live=False):
     if portofolio is None:
         raise SystemExit(1)
 
+    tanggal_cache = baca_tanggal_terakhir("harga.csv")
+
     posisi = baca_posisi("posisi.csv")
 
-    data_harga = ambil_data_harga(posisi.keys(), portofolio, live)
+    data_harga = ambil_data_harga(posisi.keys(), portofolio, tanggal_cache, live)
 
     total_nilai = 0
     total_modal = 0
@@ -123,8 +149,8 @@ def cetak_laporan(live=False):
         lot = info["lot"]
         harga_beli = info["harga_beli"]
 
-        harga = data_harga.get(ticker)
-        if not harga:
+        entri = data_harga.get(ticker)
+        if not entri or not entri.get("harga"):
             print(
                 f"PERINGATAN: posisi {ticker} tidak punya data harga"
                 f" - TOTAL TIDAK MENCAKUP POSISI INI"
@@ -132,10 +158,11 @@ def cetak_laporan(live=False):
             continue
 
         hasil = analisis_saham(
-            harga,
+            entri["harga"],
             lot,
             harga_beli,
         )
+        hasil["tanggal_terakhir"] = entri["tanggal_terakhir"]
 
         total_nilai += hasil["nilai_pasar"]
         total_modal += hasil["modal"]
