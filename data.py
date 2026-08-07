@@ -17,9 +17,17 @@ def baca_semua_harga(nama_file):
                     continue
 
                 bagian = baris.strip().split(",")
-                ticker = bagian[0]
-                tanggal = bagian[1]
-                harga = float(bagian[2])
+
+                # salah ketik saat edit tangan adalah mode kegagalan paling
+                # umum - kolom kurang atau field non-numerik harus dilewati
+                # dengan peringatan, bukan meruntuhkan seluruh pembacaan file.
+                try:
+                    ticker = bagian[0]
+                    tanggal = bagian[1]
+                    harga = float(bagian[2])
+                except (IndexError, ValueError):
+                    print(f"PERINGATAN: baris harga tidak valid, dilewati: {baris.strip()}")
+                    continue
 
                 if ticker not in mentah:
                     mentah[ticker] = []
@@ -142,9 +150,13 @@ def baca_posisi(nama_file):
 
                 bagian = baris.strip().split(",")
 
-                ticker = bagian[0]
-                lot = int(bagian[1])
-                harga_beli = int(bagian[2])
+                try:
+                    ticker = bagian[0]
+                    lot = int(bagian[1])
+                    harga_beli = int(bagian[2])
+                except (IndexError, ValueError):
+                    print(f"PERINGATAN: baris posisi tidak valid, dilewati: {baris.strip()}")
+                    continue
 
                 # file adalah trust boundary sesungguhnya, bukan cuma CLI
                 # tambah_posisi - posisi.csv bisa diedit tangan. lot/harga_beli

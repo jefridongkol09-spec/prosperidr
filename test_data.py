@@ -70,6 +70,31 @@ def test_baca_semua_harga_nol_di_ekor_dibuang(tmp_path):
     assert hasil == {"BBCA": [100.0, 200.0]}
 
 
+def test_baca_semua_harga_lewati_baris_tidak_bisa_diparse(tmp_path, capsys):
+    # Validasi semantik (harga 0) tidak cukup - salah ketik saat edit tangan
+    # adalah mode kegagalan yang lebih umum. float() gagal parsing harus
+    # dilewati dengan peringatan, bukan meruntuhkan seluruh pembacaan file.
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text(
+        "ticker,tanggal,close\n"
+        "BBCA,2025-01-01,9800\n"
+        "BBCA,2025-01-02,sembilanratus\n"
+        "BBCA,2025-01-03,9700\n"
+    )
+
+    hasil = baca_semua_harga(str(file_path))
+
+    assert hasil == {"BBCA": [9800.0, 9700.0]}
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
+def test_baca_semua_harga_lewati_baris_kolom_kurang(tmp_path):
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text("ticker,tanggal,close\nBBCA,2025-01-01,9800\nBBCA,2025-01-02\n")
+
+    assert baca_semua_harga(str(file_path)) == {"BBCA": [9800.0]}
+
+
 def test_baca_tanggal_terakhir():
     hasil = baca_tanggal_terakhir("harga.csv")
     assert hasil == {
@@ -145,6 +170,31 @@ def test_baca_posisi_lewati_lot_negatif(tmp_path):
     file_path.write_text("ticker,lot,harga_beli\nBBCA,-5,9500\n")
 
     assert baca_posisi(str(file_path)) == {}
+
+
+def test_baca_posisi_lewati_baris_tidak_bisa_diparse(tmp_path, capsys):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text(
+        "ticker,lot,harga_beli\n"
+        "BBCA,10,9500\n"
+        "BBRI,sepuluh,4400\n"
+        "BMRI,20,6300\n"
+    )
+
+    hasil = baca_posisi(str(file_path))
+
+    assert hasil == {
+        "BBCA": {"lot": 10, "harga_beli": 9500},
+        "BMRI": {"lot": 20, "harga_beli": 6300},
+    }
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
+def test_baca_posisi_lewati_baris_kolom_kurang(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\nBBCA,10,9500\nBBRI,50\n")
+
+    assert baca_posisi(str(file_path)) == {"BBCA": {"lot": 10, "harga_beli": 9500}}
 
 
 def test_tambah_posisi_ticker_baru(tmp_path):
