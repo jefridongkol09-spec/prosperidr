@@ -60,6 +60,30 @@ def test_ambil_harga_online_nan_di_tengah_ditolak(monkeypatch, capsys):
     assert "PERINGATAN" in capsys.readouterr().out
 
 
+def test_ambil_harga_online_nol_di_tengah_ditolak(monkeypatch, capsys):
+    # Kebijakan disatukan dengan NaN: harga 0 di IDX tidak pernah sah - sama
+    # seperti NaN, keduanya tanda data korup/delisting, bukan pergerakan
+    # pasar nyata. 0 di TENGAH window menolak seluruh data, sama seperti NaN.
+    df = buat_df([100.0, 0.0, 105.0], ["2026-08-03", "2026-08-04", "2026-08-05"])
+    monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))
+
+    hasil = api_harga.ambil_harga_online("BBCA")
+
+    assert hasil is None
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
+def test_ambil_harga_online_nol_di_ekor_dibuang(monkeypatch):
+    # 0 di EKOR (hari terakhir) diperlakukan sama seperti NaN di ekor -
+    # dibuang, mundur ke hari valid terakhir, bukan ikut menolak semuanya.
+    df = buat_df([100.0, 200.0, 0.0], ["2026-08-03", "2026-08-04", "2026-08-05"])
+    monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))
+
+    hasil = api_harga.ambil_harga_online("BBCA")
+
+    assert hasil == {"harga": [100.0, 200.0], "tanggal_terakhir": "2026-08-04"}
+
+
 def test_ambil_harga_online_semua_nan(monkeypatch):
     df = buat_df([float("nan"), float("nan")], ["2026-08-03", "2026-08-04"])
     monkeypatch.setattr(api_harga.yf, "Ticker", lambda simbol: FakeTicker(df))

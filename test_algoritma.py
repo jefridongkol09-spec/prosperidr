@@ -25,14 +25,17 @@ def test_hitung_return_harian():
     assert round(hasil[2], 2) == 6.06
 
 
-def test_hitung_return_harian_lewati_pembagian_oleh_nol():
-    # Harga sebelumnya 0 (delisting/data korup) membuat pembagian tak
-    # terdefinisi - lewati transisi itu, jangan crash. Transisi MENUJU 0
-    # tetap valid secara matematis (-100%), tetap dihitung.
+def test_hitung_return_harian_lewati_transisi_yang_menyentuh_nol():
+    # Harga 0 di IDX tidak pernah sah - tanda data korup/delisting, bukan
+    # pergerakan pasar nyata (kebijakan yang sama dengan NaN di api_harga.py
+    # dan data.py). Lewati transisi DARI maupun KE harga 0, jangan hitung
+    # -100% seolah itu pergerakan pasar sungguhan.
     hasil = hitung_return_harian([100.0, 0.0, 105.0])
-    assert hasil == [-100.0]
+    assert hasil == []
 
 
-def test_hitung_return_harian_harga_nol_di_tengah_lewati_satu_transisi():
+def test_hitung_return_harian_nol_di_tengah_lewati_dua_transisi():
     hasil = hitung_return_harian([100.0, 110.0, 0.0, 50.0])
-    assert hasil == [10.0, -100.0]
+    # (110-100)/100=+10% tetap terhitung; kedua transisi yang menyentuh 0
+    # (110->0 dan 0->50) dilewati, bukan cuma satu.
+    assert hasil == [10.0]

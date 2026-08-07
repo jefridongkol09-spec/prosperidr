@@ -1,3 +1,12 @@
+import math
+
+
+def _tidak_valid(harga):
+    # NaN dan harga 0 sama-sama tanda data korup/delisting - harga saham sah
+    # tidak pernah 0. Kebijakan yang sama dengan api_harga._tidak_valid.
+    return math.isnan(harga) or harga == 0
+
+
 def baca_semua_harga(nama_file):
     try:
         mentah = {}
@@ -22,7 +31,28 @@ def baca_semua_harga(nama_file):
         hasil = {}
         for ticker, baris_harga in mentah.items():
             baris_harga.sort(key=lambda pasangan: pasangan[0])
-            hasil[ticker] = [harga for _, harga in baris_harga]
+            harga_list = [harga for _, harga in baris_harga]
+
+            # harga 0 (atau NaN kalau ditulis manual) menandakan data korup/
+            # delisting, bukan harga pasar sah - kebijakan yang sama dengan
+            # api_harga.py. Buang di ekor (hari terbaru belum valid), tolak
+            # seluruh riwayat ticker kalau masih ada di tengah setelah itu,
+            # supaya hitung_return_harian tidak menyambung lintas "lubang".
+            while harga_list and _tidak_valid(harga_list[-1]):
+                harga_list.pop()
+
+            if not harga_list:
+                print(f"PERINGATAN: semua harga {ticker} tidak valid, dilewati")
+                continue
+
+            if any(_tidak_valid(h) for h in harga_list):
+                print(
+                    f"PERINGATAN: riwayat harga {ticker} punya hari bolong"
+                    f" di tengah, ditolak"
+                )
+                continue
+
+            hasil[ticker] = harga_list
 
         return hasil
     except FileNotFoundError:
@@ -115,6 +145,17 @@ def baca_posisi(nama_file):
                 ticker = bagian[0]
                 lot = int(bagian[1])
                 harga_beli = int(bagian[2])
+
+                # file adalah trust boundary sesungguhnya, bukan cuma CLI
+                # tambah_posisi - posisi.csv bisa diedit tangan. lot/harga_beli
+                # <= 0 membuat modal = 0 yang meledakkan pembagian di
+                # analisis_saham nanti - lewati di sini juga, jangan lolos.
+                if lot <= 0 or harga_beli <= 0:
+                    print(
+                        f"PERINGATAN: posisi {ticker} punya lot/harga_beli"
+                        f" tidak valid ({lot}, {harga_beli}), dilewati"
+                    )
+                    continue
 
                 hasil[ticker] = {
                     "lot": lot,

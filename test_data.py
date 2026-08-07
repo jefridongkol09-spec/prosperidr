@@ -36,6 +36,40 @@ def test_baca_semua_harga_urutan_baris_diacak(tmp_path):
     assert hasil == {"BBCA": [9800.0, 9850.0, 9700.0]}
 
 
+def test_baca_semua_harga_nol_di_tengah_ditolak(tmp_path, capsys):
+    # Kebijakan yang sama seperti api_harga.py: harga 0 di tengah deret
+    # ditolak seluruhnya (bukan disambung), sama seperti NaN di tengah
+    # window live - keduanya tanda data korup, bukan pergerakan pasar sah.
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text(
+        "ticker,tanggal,close\n"
+        "BBCA,2025-01-01,100\n"
+        "BBCA,2025-01-02,0\n"
+        "BBCA,2025-01-03,105\n"
+    )
+
+    hasil = baca_semua_harga(str(file_path))
+
+    assert hasil == {}
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
+def test_baca_semua_harga_nol_di_ekor_dibuang(tmp_path):
+    # 0 di hari TERAKHIR (kronologis) diperlakukan seperti NaN di ekor
+    # window live - dibuang, mundur ke harga valid terakhir.
+    file_path = tmp_path / "harga.csv"
+    file_path.write_text(
+        "ticker,tanggal,close\n"
+        "BBCA,2025-01-01,100\n"
+        "BBCA,2025-01-02,200\n"
+        "BBCA,2025-01-03,0\n"
+    )
+
+    hasil = baca_semua_harga(str(file_path))
+
+    assert hasil == {"BBCA": [100.0, 200.0]}
+
+
 def test_baca_tanggal_terakhir():
     hasil = baca_tanggal_terakhir("harga.csv")
     assert hasil == {
@@ -75,6 +109,42 @@ def test_baca_posisi():
 
 def test_baca_posisi_file_tidak_ada():
     assert baca_posisi("tidak_ada.csv") is None
+
+
+def test_baca_posisi_lewati_lot_tidak_valid(tmp_path, capsys):
+    # File adalah trust boundary sesungguhnya, bukan cuma CLI tambah_posisi -
+    # posisi.csv biasa diedit tangan, dan baris BBRI,0,4400 harus dilewati
+    # dengan peringatan di sini juga, bukan lolos lalu meledak di
+    # analisis_saham (modal=0 -> ZeroDivisionError).
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text(
+        "ticker,lot,harga_beli\n"
+        "BBCA,10,9500\n"
+        "BBRI,0,4400\n"
+        "BMRI,20,6300\n"
+    )
+
+    hasil = baca_posisi(str(file_path))
+
+    assert hasil == {
+        "BBCA": {"lot": 10, "harga_beli": 9500},
+        "BMRI": {"lot": 20, "harga_beli": 6300},
+    }
+    assert "PERINGATAN" in capsys.readouterr().out
+
+
+def test_baca_posisi_lewati_harga_beli_tidak_valid(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\nBBCA,10,0\n")
+
+    assert baca_posisi(str(file_path)) == {}
+
+
+def test_baca_posisi_lewati_lot_negatif(tmp_path):
+    file_path = tmp_path / "posisi.csv"
+    file_path.write_text("ticker,lot,harga_beli\nBBCA,-5,9500\n")
+
+    assert baca_posisi(str(file_path)) == {}
 
 
 def test_tambah_posisi_ticker_baru(tmp_path):
