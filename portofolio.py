@@ -191,7 +191,7 @@ def cetak_laporan(live=False):
         f.write(teks)
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description="prosperidr - portfolio tracker")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -210,7 +210,7 @@ def main():
     parser_hapus = subparsers.add_parser("hapus")
     parser_hapus.add_argument("ticker")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.command == "laporan":
         cetak_laporan(live=args.live)
