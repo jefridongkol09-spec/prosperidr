@@ -8,7 +8,10 @@ from data import (
 
 
 def test_baca_semua_harga():
-    hasil = baca_semua_harga("harga.csv")
+    # contoh_harga.csv, bukan harga.csv - yang terakhir gitignored (working
+    # file pribadi pengguna), tidak dijamin ada di clone segar. contoh_*.csv
+    # ter-commit sebagai fixture tes sekaligus dokumentasi hidup.
+    hasil = baca_semua_harga("contoh_harga.csv")
     assert hasil == {
         "BBCA": [9800.0, 9850.0, 9700.0, 9900.0],
         "BBRI": [4500.0, 4480.0, 4550.0, 4600.0],
@@ -96,7 +99,7 @@ def test_baca_semua_harga_lewati_baris_kolom_kurang(tmp_path):
 
 
 def test_baca_tanggal_terakhir():
-    hasil = baca_tanggal_terakhir("harga.csv")
+    hasil = baca_tanggal_terakhir("contoh_harga.csv")
     assert hasil == {
         "BBCA": "2025-01-04",
         "BBRI": "2025-01-04",
@@ -124,7 +127,7 @@ def test_baca_tanggal_terakhir_urutan_baris_diacak(tmp_path):
 
 
 def test_baca_posisi():
-    hasil = baca_posisi("posisi.csv")
+    hasil = baca_posisi("contoh_posisi.csv")
     assert hasil == {
         "BBCA": {"lot": 10, "harga_beli": 9500},
         "BBRI": {"lot": 50, "harga_beli": 4400},
