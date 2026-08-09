@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from data import (
     baca_semua_harga,
@@ -131,7 +132,8 @@ def ambil_data_harga(tickers, cache, cache_tanggal, live):
                 continue
             print(
                 f"PERINGATAN: gagal ambil harga live untuk {ticker}"
-                f" - pakai data historis dari harga.csv"
+                f" - pakai data historis dari harga.csv",
+                file=sys.stderr,
             )
 
         if ticker in cache:
@@ -168,7 +170,8 @@ def cetak_laporan(live=False):
         if not entri or not entri.get("harga"):
             print(
                 f"PERINGATAN: posisi {ticker} tidak punya data harga"
-                f" - TOTAL TIDAK MENCAKUP POSISI INI"
+                f" - TOTAL TIDAK MENCAKUP POSISI INI",
+                file=sys.stderr,
             )
             continue
 

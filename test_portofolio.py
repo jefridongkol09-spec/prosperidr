@@ -51,7 +51,7 @@ def test_ambil_data_harga_live_gagal_fallback_ke_cache(monkeypatch, capsys):
     hasil = ambil_data_harga(["BBCA"], cache, cache_tanggal, live=True)
 
     assert hasil == {"BBCA": {"harga": [9800.0, 9900.0], "tanggal_terakhir": "2026-08-04"}}
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_ambil_data_harga_live_gagal_tanpa_cache(monkeypatch):

@@ -51,7 +51,7 @@ def test_baca_semua_harga_nol_di_tengah_ditolak(tmp_path, capsys):
     hasil = baca_semua_harga(str(file_path))
 
     assert hasil == {}
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_baca_semua_harga_nol_di_ekor_dibuang(tmp_path):
@@ -85,7 +85,7 @@ def test_baca_semua_harga_lewati_baris_tidak_bisa_diparse(tmp_path, capsys):
     hasil = baca_semua_harga(str(file_path))
 
     assert hasil == {"BBCA": [9800.0, 9700.0]}
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_baca_semua_harga_lewati_baris_kolom_kurang(tmp_path):
@@ -155,7 +155,7 @@ def test_baca_posisi_lewati_lot_tidak_valid(tmp_path, capsys):
         "BBCA": {"lot": 10, "harga_beli": 9500},
         "BMRI": {"lot": 20, "harga_beli": 6300},
     }
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_baca_posisi_lewati_harga_beli_tidak_valid(tmp_path):
@@ -187,7 +187,7 @@ def test_baca_posisi_lewati_baris_tidak_bisa_diparse(tmp_path, capsys):
         "BBCA": {"lot": 10, "harga_beli": 9500},
         "BMRI": {"lot": 20, "harga_beli": 6300},
     }
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_baca_posisi_lewati_baris_kolom_kurang(tmp_path):

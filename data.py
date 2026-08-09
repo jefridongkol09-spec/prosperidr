@@ -1,4 +1,5 @@
 import math
+import sys
 
 
 def _tidak_valid(harga):
@@ -26,7 +27,10 @@ def baca_semua_harga(nama_file):
                     tanggal = bagian[1]
                     harga = float(bagian[2])
                 except (IndexError, ValueError):
-                    print(f"PERINGATAN: baris harga tidak valid, dilewati: {baris.strip()}")
+                    print(
+                        f"PERINGATAN: baris harga tidak valid, dilewati: {baris.strip()}",
+                        file=sys.stderr,
+                    )
                     continue
 
                 if ticker not in mentah:
@@ -50,13 +54,17 @@ def baca_semua_harga(nama_file):
                 harga_list.pop()
 
             if not harga_list:
-                print(f"PERINGATAN: semua harga {ticker} tidak valid, dilewati")
+                print(
+                    f"PERINGATAN: semua harga {ticker} tidak valid, dilewati",
+                    file=sys.stderr,
+                )
                 continue
 
             if any(_tidak_valid(h) for h in harga_list):
                 print(
                     f"PERINGATAN: riwayat harga {ticker} punya hari bolong"
-                    f" di tengah, ditolak"
+                    f" di tengah, ditolak",
+                    file=sys.stderr,
                 )
                 continue
 
@@ -64,7 +72,7 @@ def baca_semua_harga(nama_file):
 
         return hasil
     except FileNotFoundError:
-        print(f"PERINGATAN: file {nama_file} tidak ditemukan")
+        print(f"PERINGATAN: file {nama_file} tidak ditemukan", file=sys.stderr)
         return None
 
 
@@ -89,7 +97,7 @@ def baca_tanggal_terakhir(nama_file):
 
         return hasil
     except FileNotFoundError:
-        print(f"PERINGATAN: file {nama_file} tidak ditemukan")
+        print(f"PERINGATAN: file {nama_file} tidak ditemukan", file=sys.stderr)
         return None
 
 
@@ -105,7 +113,7 @@ def tambah_posisi(nama_file, ticker, lot, harga_beli):
         # lot/harga_beli <= 0 membuat modal = 0, yang meledakkan pembagian
         # pl_persen di analisis_saham nanti - tolak di titik masuk data,
         # bukan biarkan tersimpan lalu crash jauh dari sumbernya.
-        print("PERINGATAN: lot dan harga_beli harus lebih besar dari 0")
+        print("PERINGATAN: lot dan harga_beli harus lebih besar dari 0", file=sys.stderr)
         return False
 
     posisi = baca_posisi(nama_file)
@@ -131,7 +139,7 @@ def hapus_posisi(nama_file, ticker):
         return False
 
     if ticker not in posisi:
-        print(f"PERINGATAN: posisi {ticker} tidak ditemukan")
+        print(f"PERINGATAN: posisi {ticker} tidak ditemukan", file=sys.stderr)
         return False
 
     del posisi[ticker]
@@ -155,7 +163,10 @@ def baca_posisi(nama_file):
                     lot = int(bagian[1])
                     harga_beli = int(bagian[2])
                 except (IndexError, ValueError):
-                    print(f"PERINGATAN: baris posisi tidak valid, dilewati: {baris.strip()}")
+                    print(
+                        f"PERINGATAN: baris posisi tidak valid, dilewati: {baris.strip()}",
+                        file=sys.stderr,
+                    )
                     continue
 
                 # file adalah trust boundary sesungguhnya, bukan cuma CLI
@@ -165,7 +176,8 @@ def baca_posisi(nama_file):
                 if lot <= 0 or harga_beli <= 0:
                     print(
                         f"PERINGATAN: posisi {ticker} punya lot/harga_beli"
-                        f" tidak valid ({lot}, {harga_beli}), dilewati"
+                        f" tidak valid ({lot}, {harga_beli}), dilewati",
+                        file=sys.stderr,
                     )
                     continue
 
@@ -176,5 +188,5 @@ def baca_posisi(nama_file):
 
         return hasil
     except FileNotFoundError:
-        print(f"PERINGATAN: file {nama_file} tidak ditemukan")
+        print(f"PERINGATAN: file {nama_file} tidak ditemukan", file=sys.stderr)
         return None

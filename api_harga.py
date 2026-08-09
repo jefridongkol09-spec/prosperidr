@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import yfinance as yf
 
@@ -33,7 +35,10 @@ def ambil_harga_online(ticker, hari=5):
     # lintas-gap itu seolah return satu hari. Tolak seluruh data, jangan
     # disambung diam-diam.
     if any(_tidak_valid(harga) for harga in tutup):
-        print(f"PERINGATAN: data harga {ticker} punya hari bolong di tengah, ditolak")
+        print(
+            f"PERINGATAN: data harga {ticker} punya hari bolong di tengah, ditolak",
+            file=sys.stderr,
+        )
         return None
 
     return {

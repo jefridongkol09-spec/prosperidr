@@ -57,7 +57,7 @@ def test_ambil_harga_online_nan_di_tengah_ditolak(monkeypatch, capsys):
     hasil = api_harga.ambil_harga_online("BBCA")
 
     assert hasil is None
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_ambil_harga_online_nol_di_tengah_ditolak(monkeypatch, capsys):
@@ -70,7 +70,7 @@ def test_ambil_harga_online_nol_di_tengah_ditolak(monkeypatch, capsys):
     hasil = api_harga.ambil_harga_online("BBCA")
 
     assert hasil is None
-    assert "PERINGATAN" in capsys.readouterr().out
+    assert "PERINGATAN" in capsys.readouterr().err
 
 
 def test_ambil_harga_online_nol_di_ekor_dibuang(monkeypatch):
