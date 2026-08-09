@@ -44,20 +44,31 @@ def test_tambah_lalu_laporan(tmp_path, monkeypatch, capsys):
 
 
 def test_hapus_ticker(tmp_path, monkeypatch, capsys):
+    # Kontrol positif (BBRI) di samping yang dihapus (BBCA): membuktikan
+    # laporan sungguh berjalan dengan data nyata, penghapusan selektif
+    # (bukan menghapus semua ticker), dan yang dihapus memang hilang -
+    # tiga hal sekaligus, bukan cuma "BBCA tidak ada" yang juga benar
+    # kalau seluruh jalur laporan diam-diam rusak total.
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "posisi.csv").write_text("ticker,lot,harga_beli\nBBCA,10,9500\n")
+    (tmp_path / "posisi.csv").write_text(
+        "ticker,lot,harga_beli\nBBCA,10,9500\nBBRI,50,4400\n"
+    )
     (tmp_path / "harga.csv").write_text(
         "ticker,tanggal,close\n"
         "BBCA,2025-01-01,9800\n"
         "BBCA,2025-01-02,9900\n"
+        "BBRI,2025-01-01,4500\n"
+        "BBRI,2025-01-02,4600\n"
     )
 
     main(["hapus", "BBCA"])
     capsys.readouterr()  # buang output "berhasil dihapus"
 
     main(["laporan"])
+    keluaran = capsys.readouterr().out
 
-    assert "BBCA" not in capsys.readouterr().out
+    assert "BBRI" in keluaran
+    assert "BBCA" not in keluaran
 
 
 def test_tambah_tanpa_argumen_ditolak(capsys):
@@ -96,3 +107,4 @@ def test_smoke_interpreter_segar(tmp_path):
     )
 
     assert hasil.returncode == 0
+    assert "BBCA" in hasil.stdout
