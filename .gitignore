@@ -2,3 +2,19 @@ laporan.txt
 __pycache__/
 posisi.csv
 harga.csv
+
+# file latihan solo, bukan bagian prosperidr
+dict.py
+error_handling.py
+file_io.py
+functions.py
+hello.py
+hitung.py
+investasi.py
+latihan.py
+lists.py
+loop.py
+nilai.py
+portfolio.txt
+portfolio_app.py
+portofolio_tracker.py
