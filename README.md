@@ -9,7 +9,7 @@ Investor ritel yang ingin melacak portofolio sendiri tanpa spreadsheet manual, d
 ## Instalasi
 
 ```
-git clone <url-repo-ini>
+git clone https://github.com/jefridongkol09-spec/prosperidr.git
 cd prosperidr
 pip install -r requirements.txt
 ```
