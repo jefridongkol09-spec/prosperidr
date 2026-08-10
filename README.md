@@ -1,5 +1,7 @@
 # prosperidr
 
+![CI](https://github.com/jefridongkol09-spec/prosperidr/actions/workflows/ci.yml/badge.svg)
+
 CLI sederhana untuk melacak portofolio saham IDX pribadi lewat command line: catat posisi (ticker, lot, harga beli), lalu lihat laporan untung/rugi berdasarkan harga historis (CSV lokal) atau harga real-time (yfinance).
 
 ## Untuk siapa
@@ -14,7 +16,7 @@ cd prosperidr
 pip install -r requirements.txt
 ```
 
-Dikembangkan dan diuji di Python 3.14. Koneksi internet hanya dibutuhkan untuk mode `--live` (lihat di bawah).
+Diuji otomatis lewat CI di Python 3.10, 3.12, dan 3.14 sekaligus di setiap push (lihat badge di atas, bukan klaim sepihak). Koneksi internet hanya dibutuhkan untuk mode `--live` (lihat di bawah).
 
 Di Windows, gunakan `py` alih-alih `python` kalau perintah `python` tidak dikenali (masalah stub Microsoft Store yang umum di instalasi Windows default) — semua contoh di README ini memakai `python`, ganti sendiri ke `py` kalau mengalami itu.
 
