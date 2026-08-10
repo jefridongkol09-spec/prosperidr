@@ -190,7 +190,7 @@ def cetak_laporan(live=False):
 
     teks = susun_laporan(laporan, total_nilai, total_modal)
     print(teks)
-    with open("laporan.txt", "w") as f:
+    with open("laporan.txt", "w", encoding="utf-8") as f:
         f.write(teks)
 
 

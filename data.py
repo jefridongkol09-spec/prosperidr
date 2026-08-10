@@ -12,7 +12,7 @@ def baca_semua_harga(nama_file):
     try:
         mentah = {}
 
-        with open(nama_file, "r") as file:
+        with open(nama_file, "r", encoding="utf-8") as file:
             for i, baris in enumerate(file):
                 if i == 0:
                     continue
@@ -80,7 +80,7 @@ def baca_tanggal_terakhir(nama_file):
     try:
         hasil = {}
 
-        with open(nama_file, "r") as file:
+        with open(nama_file, "r", encoding="utf-8") as file:
             for i, baris in enumerate(file):
                 if i == 0:
                     continue
@@ -102,7 +102,7 @@ def baca_tanggal_terakhir(nama_file):
 
 
 def tulis_posisi(nama_file, data_posisi):
-    with open(nama_file, "w") as file:
+    with open(nama_file, "w", encoding="utf-8") as file:
         file.write("ticker,lot,harga_beli\n")
         for tkr, info in data_posisi.items():
             file.write(f"{tkr},{info['lot']},{info['harga_beli']}\n")
@@ -151,7 +151,7 @@ def baca_posisi(nama_file):
     try:
         hasil = {}
 
-        with open(nama_file, "r") as file:
+        with open(nama_file, "r", encoding="utf-8") as file:
             for i, baris in enumerate(file):
                 if i == 0:
                     continue
