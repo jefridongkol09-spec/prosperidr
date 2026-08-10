@@ -124,5 +124,7 @@ def test_cetak_laporan_keluar_bersih_saat_posisi_csv_hilang(tmp_path, monkeypatc
     monkeypatch.chdir(tmp_path)
     (tmp_path / "harga.csv").write_text("ticker,tanggal,close\n")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as info:
         cetak_laporan()
+
+    assert info.value.code == 1
