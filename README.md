@@ -100,3 +100,7 @@ Test suite mencakup unit test murni (`test_algoritma.py`, `test_data.py`, `test_
 ## Keterbatasan yang diketahui
 
 `return_harian` mengasumsikan dua elemen terakhir dari daftar harga adalah dua hari berurutan. Ini benar selama kebijakan di atas berjalan (data tidak valid di tengah selalu ditolak penuh), tapi kalau titik data valid terakhir kebetulan jatuh tepat di ujung window karena alasan lain, label "return harian" bisa secara halus mewakili rentang yang lebih panjang dari satu hari. Perbaikan penuh butuh membawa tanggal berpasangan dengan harga di sepanjang pipa data, bukan tambalan — dicatat sebagai keputusan sadar untuk tidak dipaksakan masuk scope saat ini, bukan bug yang terlewat.
+
+## Proyek terkait
+
+[cuanledger](https://github.com/jefridongkol09-spec/cuanledger) adalah penerus proyek ini: portofolio tracker yang sama secara konsep, dibangun ulang sebagai FastAPI + SQLite API alih-alih CLI + CSV. Beberapa keputusan di sini — kebijakan harga tidak valid, pemisahan cache-vs-live — dibawa langsung ke sana, sementara batasan struktural seperti CSV dan single-process CLI ditinggalkan.
